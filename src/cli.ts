@@ -462,20 +462,19 @@ async function status(args: string[]) {
   const parsedArgs = [...args];
   const asJson = consumeFlags(parsedArgs, "--json");
   ensureNoUnexpectedArgs(parsedArgs, "status");
-  const config = loadConfigFile();
-  if (!config.AFFINE_API_TOKEN) {
-    throw new CliError("Not logged in. Run: affine-mcp login");
-  }
+  const effective = loadConfig();
   try {
+    const { auth, authKind } = await resolveCliAuth(effective.baseUrl);
     const inspection = await inspectConnection(
-      config.AFFINE_BASE_URL || "https://app.affine.pro",
-      { token: config.AFFINE_API_TOKEN },
+      effective.baseUrl,
+      auth,
     );
     if (asJson) {
       console.log(JSON.stringify({
         configFile: CONFIG_FILE,
-        baseUrl: config.AFFINE_BASE_URL || "https://app.affine.pro",
-        workspaceId: config.AFFINE_WORKSPACE_ID || null,
+        baseUrl: effective.baseUrl,
+        workspaceId: effective.defaultWorkspaceId || null,
+        authKind,
         userName: inspection.userName,
         userEmail: inspection.userEmail,
         workspaceCount: inspection.workspaceCount,
@@ -484,9 +483,9 @@ async function status(args: string[]) {
     }
 
     console.error(`Config: ${CONFIG_FILE}`);
-    console.error(`URL:       ${config.AFFINE_BASE_URL || "(default)"}`);
-    console.error("Token:     (set)");
-    console.error(`Workspace: ${config.AFFINE_WORKSPACE_ID || "(none)"}\n`);
+    console.error(`URL:       ${effective.baseUrl}`);
+    console.error(`Auth:      ${authKind}`);
+    console.error(`Workspace: ${effective.defaultWorkspaceId || "(none)"}\n`);
     console.error(`User: ${inspection.userName} <${inspection.userEmail}>`);
     console.error(`Workspaces: ${inspection.workspaceCount}`);
   } catch (err: any) {
