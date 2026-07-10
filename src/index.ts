@@ -60,11 +60,6 @@ console.error(`[affine-mcp] Endpoint: ${config.baseUrl}${config.graphqlPath}`);
 const hasAuth = !!(config.apiToken || config.cookie || (config.email && config.password));
 console.error(`[affine-mcp] Auth: ${hasAuth ? 'configured' : 'not configured'}`);
 console.error(`[affine-mcp] HTTP auth mode: ${config.authMode}`);
-if (hasAuth && config.baseUrl.startsWith("http://")
-    && !config.baseUrl.includes("localhost")
-    && !config.baseUrl.includes("127.0.0.1")) {
-  console.error("WARNING: Credentials configured over plain HTTP. Use HTTPS for remote servers.");
-}
 console.error(`[affine-mcp] Workspace: ${config.defaultWorkspaceId ? 'set' : '(none)'}`);
 
 for (const warning of toolFilter.warnings) {

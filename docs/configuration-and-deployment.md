@@ -22,7 +22,8 @@ Auth priority within the active configuration:
 
 | Variable | Required | Default | Notes |
 | --- | --- | --- | --- |
-| `AFFINE_BASE_URL` | Yes | None | Base URL for AFFiNE Cloud or self-hosted AFFiNE |
+| `AFFINE_BASE_URL` | No | `http://localhost:3010` | Base URL for AFFiNE Cloud or self-hosted AFFiNE; remote destinations must use HTTPS |
+| `AFFINE_ALLOW_INSECURE_HTTP` | No | `false` | Explicitly allow a remote plain-HTTP AFFiNE URL on a trusted private network only |
 | `AFFINE_GRAPHQL_PATH` | No | `/graphql` | Override only if your AFFiNE deployment uses a custom GraphQL path |
 | `AFFINE_WORKSPACE_ID` | No | Auto-detected when possible | Pins the active workspace |
 | `AFFINE_LOGIN_AT_START` | No | async login behavior | Set to `sync` only when you must block startup on login |
@@ -51,10 +52,12 @@ Auth priority within the active configuration:
 | `MCP_TRANSPORT` | Yes for HTTP mode | stdio | Set to `http` |
 | `PORT` | No | `3000` | Commonly injected by container platforms |
 | `AFFINE_MCP_AUTH_MODE` | No | `bearer` | `bearer` or `oauth` |
-| `AFFINE_MCP_HTTP_HOST` | No | platform default | Use `0.0.0.0` in containers |
+| `AFFINE_MCP_HTTP_HOST` | No | `127.0.0.1` | Use `0.0.0.0` in containers; non-loopback bearer listeners require authentication |
 | `AFFINE_MCP_HTTP_ALLOWED_ORIGINS` | No | none | Comma-separated list for browser clients |
 | `AFFINE_MCP_HTTP_ALLOW_ALL_ORIGINS` | No | `false` | Testing only; rejected in OAuth mode |
-| `AFFINE_MCP_HTTP_TOKEN` | Required in bearer mode | none | Shared bearer token for `/mcp`, `/sse`, and `/messages` |
+| `AFFINE_MCP_HTTP_TOKEN` | Required for non-loopback bearer mode | none | Shared bearer token for `/mcp`, `/sse`, and `/messages` |
+| `AFFINE_MCP_HTTP_ALLOW_UNAUTHENTICATED` | No | `false` | Unsafe opt-in for an unauthenticated non-loopback bearer-mode listener |
+| `AFFINE_MCP_HTTP_ALLOW_QUERY_TOKEN` | No | `false` | Deprecated compatibility mode for `?token=` clients; prefer the `Authorization` header |
 | `AFFINE_MCP_PUBLIC_BASE_URL` | Required in OAuth mode | none | Public base URL for this MCP server |
 | `AFFINE_OAUTH_ISSUER_URL` | Required in OAuth mode | none | OAuth issuer discovery URL |
 | `AFFINE_OAUTH_SCOPES` | No | `mcp` | Scopes advertised for OAuth-protected access |
@@ -126,6 +129,18 @@ Use bearer mode when:
 - the client can inject a shared secret header
 - you want the simplest remote deployment
 - you do not need OAuth discovery and token validation
+
+Bearer tokens must be sent with `Authorization: Bearer <token>`. Query-string
+tokens are rejected by default because URLs can be retained in access logs,
+browser history, and monitoring systems. Legacy clients can temporarily opt in
+with `AFFINE_MCP_HTTP_ALLOW_QUERY_TOKEN=true`, but this mode is deprecated.
+
+In bearer mode, a non-loopback listener such as `0.0.0.0`, `::`, a LAN address,
+or a hostname requires `AFFINE_MCP_HTTP_TOKEN`. Startup fails when the token is
+missing. `AFFINE_MCP_HTTP_ALLOW_UNAUTHENTICATED=true` is an explicit unsafe
+escape hatch for isolated private networks and must not be used on an
+internet-reachable listener. Loopback listeners remain available without MCP
+authentication for local development.
 
 ### OAuth mode
 
@@ -254,6 +269,8 @@ Before exposing the server remotely, confirm:
 - `AFFINE_MCP_HTTP_HOST=0.0.0.0` is set in containerized deployments
 - HTTPS or TLS termination is in front of any non-local HTTP deployment
 - bearer mode uses a long random `AFFINE_MCP_HTTP_TOKEN`, or OAuth is configured for multi-user access
+- clients send bearer credentials in the `Authorization` header rather than the URL
+- `AFFINE_MCP_HTTP_ALLOW_UNAUTHENTICATED` and `AFFINE_MCP_HTTP_ALLOW_QUERY_TOKEN` are not enabled
 - `AFFINE_MCP_HTTP_ALLOWED_ORIGINS` is set for browser-based clients
 - `AFFINE_MCP_HTTP_ALLOW_ALL_ORIGINS` is not enabled outside local testing
 - `/healthz` and `/readyz` are wired into your platform checks
@@ -266,3 +283,5 @@ Before exposing the server remotely, confirm:
 - Missing tools: confirm filtering variables are not removing them
 - Browser CORS failures: verify `AFFINE_MCP_HTTP_ALLOWED_ORIGINS`
 - OAuth failures: verify issuer discovery metadata and JWKS availability
+- Remote plain-HTTP AFFiNE URL rejected: use HTTPS, or set `AFFINE_ALLOW_INSECURE_HTTP=true` only for a trusted private network
+- Non-loopback bearer listener rejected: set `AFFINE_MCP_HTTP_TOKEN` or configure OAuth

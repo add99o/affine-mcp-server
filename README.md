@@ -217,6 +217,8 @@ For common failures, see:
 - Never commit secrets or long-lived tokens
 - Prefer API tokens over cookies or passwords in production
 - Use HTTPS for non-local deployments
+- Keep remote HTTP MCP listeners authenticated; bearer mode refuses a non-loopback bind without `AFFINE_MCP_HTTP_TOKEN`
+- Send MCP bearer tokens in the `Authorization` header, never in the URL
 - Rotate access tokens regularly
 - Restrict exposed tools with `AFFINE_DISABLED_GROUPS` and `AFFINE_DISABLED_TOOLS` for least-privilege setups
 - Use `/healthz` and `/readyz` when running the HTTP server behind a container platform or load balancer
