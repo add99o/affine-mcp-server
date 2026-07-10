@@ -220,6 +220,7 @@ For common failures, see:
 - Rotate access tokens regularly
 - Restrict exposed tools with `AFFINE_DISABLED_GROUPS` and `AFFINE_DISABLED_TOOLS` for least-privilege setups
 - Use `/healthz` and `/readyz` when running the HTTP server behind a container platform or load balancer
+- Set HTTP body, session, idle, and shutdown limits explicitly for high-volume deployments
 
 ## Development
 
