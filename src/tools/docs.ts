@@ -371,10 +371,7 @@ export function registerDocTools(server: McpServer, gql: GraphQLClient, defaults
   }
 
   async function getCookieAndEndpoint() {
-    const endpoint = gql.endpoint;
-    const cookie = gql.cookie;
-    const bearer = gql.bearer;
-    return { endpoint, cookie, bearer };
+    return await gql.getConnectionAuth();
   }
 
   const SELECT_COLORS = [
