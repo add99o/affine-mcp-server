@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed CLI requests that always used `/graphql`, custom GraphQL paths becoming unintended Socket.IO namespaces, environment-only credentials that `status` ignored, and missing config-file values for custom headers and HTTP runtime settings.
 - Corrected documented defaults for the AFFiNE base URL, HTTP bind host, transport aliases, and browser origin policy.
+- Quoted Codex snippet environment arguments safely for POSIX shells and removed saved `Authorization`/`Cookie` headers during logout without deleting unrelated headers or runtime settings.
 
 ### Tests
 - Added self-contained regression coverage for config precedence, custom GraphQL paths, environment-only diagnostics, HTTP runtime flags, CORS, and upstream-aware readiness.
