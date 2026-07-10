@@ -21,6 +21,7 @@ export type ServerConfig = {
   oauthIssuerUrl?: string;
   oauthScopes: string[];
   oauthClockSkewSeconds: number;
+  oauthAllowServiceWrites: boolean;
 };
 
 /** Config file location: ~/.config/affine-mcp/config */
@@ -159,6 +160,14 @@ function parsePositiveIntegerEnv(name: string, raw: string | undefined, fallback
   return parsed;
 }
 
+function parseBooleanEnv(name: string, raw: string | undefined, fallback: boolean): boolean {
+  if (raw === undefined || raw.trim() === "") return fallback;
+  const normalized = raw.trim().toLowerCase();
+  if (normalized === "true") return true;
+  if (normalized === "false") return false;
+  throw new Error(`${name} must be "true" or "false". Received: ${raw}`);
+}
+
 export function loadConfig(): ServerConfig {
   const file = loadConfigFile();
   const baseUrl = validateBaseUrl(env("AFFINE_BASE_URL", file, "http://localhost:3010")!);
@@ -183,6 +192,11 @@ export function loadConfig(): ServerConfig {
     env("AFFINE_OAUTH_CLOCK_SKEW_SECONDS", file),
     60,
   );
+  const oauthAllowServiceWrites = parseBooleanEnv(
+    "AFFINE_OAUTH_ALLOW_SERVICE_WRITES",
+    env("AFFINE_OAUTH_ALLOW_SERVICE_WRITES", file),
+    false,
+  );
 
   return {
     baseUrl,
@@ -198,5 +212,6 @@ export function loadConfig(): ServerConfig {
     oauthIssuerUrl,
     oauthScopes,
     oauthClockSkewSeconds,
+    oauthAllowServiceWrites,
   };
 }

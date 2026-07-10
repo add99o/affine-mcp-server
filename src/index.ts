@@ -22,6 +22,10 @@ import { startHttpMcpServer } from "./sse.js";
 import { existsSync } from "fs";
 import { CONFIG_FILE } from "./config.js";
 import { createToolFilter, toolAnnotationsFor, toolFilterRequiresRegisterTool } from "./toolSurface.js";
+import {
+  assertOAuthServiceWritePolicy,
+  createToolFilterEnvironment,
+} from "./oauthServicePolicy.js";
 
 // CLI commands: affine-mcp login|status|logout|version
 const rawArgs = process.argv.slice(2);
@@ -51,8 +55,13 @@ const transportMode = (process.env.MCP_TRANSPORT || "stdio").toLowerCase();
 const useHttpTransport =
   transportMode === "sse" || transportMode === "http" || transportMode === "streamable";
 
+// OAuth callers share one AFFiNE service credential. Default that deployment
+// model to read-only unless operators explicitly enable both a write-capable
+// profile and the service-write acknowledgement.
+const toolFilterEnvironment = createToolFilterEnvironment(config.authMode, process.env);
+
 // Tool filtering is parsed once at module load (not per-session in HTTP mode).
-const toolFilter = createToolFilter(process.env);
+const toolFilter = createToolFilter(toolFilterEnvironment);
 
 // Startup diagnostics (visible in Claude Code MCP server logs via stderr)
 console.error(`[affine-mcp] Config: ${CONFIG_FILE} (${existsSync(CONFIG_FILE) ? 'found' : 'missing'})`);
@@ -73,6 +82,22 @@ for (const warning of toolFilter.warnings) {
 
 if (config.authMode === "oauth" && !useHttpTransport) {
   throw new Error("AFFINE_MCP_AUTH_MODE=oauth requires MCP_TRANSPORT=http (or streamable/sse).");
+}
+assertOAuthServiceWritePolicy({
+  authMode: config.authMode,
+  allowServiceWrites: config.oauthAllowServiceWrites,
+  enabledWriteTools: toolFilter.enabledWriteTools,
+  toolFilterWarnings: toolFilter.warnings,
+});
+if (
+  config.authMode === "oauth"
+  && config.oauthAllowServiceWrites
+  && toolFilter.enabledWriteTools.length > 0
+) {
+  console.error(
+    "[affine-mcp] WARNING: OAuth service-account writes are enabled. Every authorized OAuth caller " +
+    "can mutate AFFiNE with the shared AFFINE_API_TOKEN permissions.",
+  );
 }
 
 async function buildServer() {
@@ -180,8 +205,8 @@ async function buildServer() {
     };
   }
   console.error(`[affine-mcp] Tool profile: ${toolFilter.profile}`);
-  console.error(`[affine-mcp] Disabled groups: ${process.env.AFFINE_DISABLED_GROUPS || "(none)"}`);
-  console.error(`[affine-mcp] Disabled tools: ${process.env.AFFINE_DISABLED_TOOLS || "(none)"}`);
+  console.error(`[affine-mcp] Disabled groups: ${toolFilterEnvironment.AFFINE_DISABLED_GROUPS || "(none)"}`);
+  console.error(`[affine-mcp] Disabled tools: ${toolFilterEnvironment.AFFINE_DISABLED_TOOLS || "(none)"}`);
   console.error(`[affine-mcp] Enabled tools: ${toolFilter.enabledTools.length}/${toolFilter.totalToolCount}`);
 
   registerWorkspaceTools(server, gql);

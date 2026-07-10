@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- OAuth deployments now default to the read-only tool profile because all callers share one AFFiNE service credential.
+- Write-capable OAuth tool surfaces now fail closed unless operators explicitly set `AFFINE_OAUTH_ALLOW_SERVICE_WRITES=true` in addition to selecting a write-capable profile.
+- OAuth deployment guidance now distinguishes MCP caller authentication from AFFiNE backend identity delegation.
+
+### Tests
+- Added regression coverage for OAuth read-only defaults, explicit write acknowledgement, profile handling, and fully disabled write surfaces.
+
 ## [2.5.0] - 2026-07-06
 
 ### Added

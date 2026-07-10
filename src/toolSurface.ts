@@ -355,6 +355,9 @@ export function createToolFilter(env: NodeJS.ProcessEnv = process.env) {
   }
 
   const enabledTools = ALL_TOOLS.filter(toolName => isEnabled(toolName));
+  const enabledWriteTools = enabledTools.filter(
+    toolName => toolName !== "sign_in" && TOOL_GROUPS[toolName].includes("write"),
+  );
 
   return {
     profile: profileResult.profile,
@@ -362,6 +365,7 @@ export function createToolFilter(env: NodeJS.ProcessEnv = process.env) {
     disabledTools,
     warnings,
     enabledTools,
+    enabledWriteTools,
     totalToolCount: ALL_TOOLS.length,
     isEnabled,
   };
