@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- Added a fail-closed guard to destructive live-test entry points. Loopback targets remain available by default, while non-loopback targets require an explicit remote opt-in and an exact `DESTROY <target>` confirmation.
+- Isolated Docker-backed test runs with unique Compose projects, private per-run credential files, scoped cleanup, and collision-resistant AFFiNE resource names.
+- Stopped printing acquired session cookies from the E2E credential helper.
+
+### Tests
+- Added self-contained CI coverage for destructive-target validation, remote confirmation, URL normalization, and unique test resource naming.
+
 ## [2.5.0] - 2026-07-06
 
 ### Added
