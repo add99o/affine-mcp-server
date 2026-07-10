@@ -207,6 +207,8 @@ Useful CLI commands:
 - `affine-mcp snippet <claude|cursor|codex|all> [--env]` - generate ready-to-paste client config
 - `affine-mcp logout` - remove stored credentials
 
+`status`, `doctor`, and the server runtime use the same `environment > saved config > defaults` resolution. For a self-hosted deployment with a non-standard GraphQL route, use `affine-mcp login --graphql-path /your/graphql/path` or set `AFFINE_GRAPHQL_PATH`; `show-config --json` prints the exact resolved `graphqlEndpoint` without exposing secrets.
+
 For common failures, see:
 
 - [docs/getting-started.md#common-first-run-failures](docs/getting-started.md#common-first-run-failures)
@@ -227,6 +229,7 @@ Run the main quality gates before opening a PR:
 
 ```bash
 npm run build
+npm run test:config-consistency
 npm run test:tool-manifest
 npm run pack:check
 ```

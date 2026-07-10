@@ -32,6 +32,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Test configuration consistency
+        run: npm run test:config-consistency
+
       - name: Verify tool manifest
         run: npm run test:tool-manifest
 
